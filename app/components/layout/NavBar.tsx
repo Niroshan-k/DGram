@@ -61,16 +61,16 @@ export default function Header() {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden lg:flex items-center gap-10">
-                    
+
                     {["Home", "About", "FAQ"].map((item) => {
                         let path;
-                        
+
                         if (item === "Home") {
-                            path ="/"
+                            path = "/"
                         } else if (item === "FAQ") {
-                            path ="/#faq"
+                            path = "/#faq"
                         } else {
-                            path =`/${item.toLowerCase()}`
+                            path = `/${item.toLowerCase()}`
                         };
 
                         return (
@@ -107,8 +107,15 @@ export default function Header() {
                             <p className="text-sm text-gray-400">Quick Access</p>
                         </div>
                         {["Home", "About", "FAQ"].map((item) => {
-                            const isHome = item === "Home";
-                            const path = isHome ? "/" : `/${item.toLowerCase()}`;
+                            let path;
+
+                            if (item === "Home") {
+                                path = "/"
+                            } else if (item === "FAQ") {
+                                path = "/#faq"
+                            } else {
+                                path = `/${item.toLowerCase()}`
+                            };
                             return (
                                 <Link
                                     key={item}
