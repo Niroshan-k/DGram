@@ -1,6 +1,7 @@
 import Client from "./components/ui/client";
 import Hero from "./components/ui/Hero";
 import HowTo from "./components/ui/HowTo";
+import FAQ from "./components/ui/FAQ";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
       <Hero />
       <HowTo />
       <Client />
+      <FAQ />
     </div>
   );
 }

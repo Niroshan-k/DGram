@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Tiny5, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import NavBar from "./components/layout/NavBar";
+import Footer from "./components/layout/Footer";
 
 const instrument_Sans = Instrument_Sans({
   variable: "--font-instrument-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <NavBar />
         {children}
+        <Footer />
       </body>
     </html>
   );
