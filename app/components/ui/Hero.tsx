@@ -38,9 +38,9 @@ export default function Hero() {
 
     return (
         <div className="relative flex flex-col min-h-screen items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 lg:inset-4 overflow-hidden lg:rounded-lg">
+            <div className="absolute inset-0 lg:inset-4 overflow-hidden lg:rounded-2xl">
                 <Image
-                    src="/bg.png"
+                    src="/background.jpg"
                     alt="Hero Image"
                     fill
                     priority
@@ -107,8 +107,8 @@ export default function Hero() {
                             <p className="hidden lg:block">Photos</p>
                         </div>
                     </div>
-                    <h1 className="text-3xl lg:text-7xl mt-2 font-tiny5 uppercase font-bold text-center">DownloadGram</h1>
-                    <p className="text-center text-sm px-2">Quick Save your favorite reels, videos, and photos online in high quality</p>
+                    <h1 className="text-5xl lg:text-7xl mt-2 font-tiny5 uppercase font-bold text-center">DownloadGram</h1>
+                    <p className="text-center text-sm px-4 py-2 rounded-full">Quick Save your favorite reels, videos, and photos online in high quality</p>
                     <div className="w-full px-4">
                         <form onSubmit={handleSubmit} className="relative mx-auto mt-4 w-full max-w-xl">
                             <input
