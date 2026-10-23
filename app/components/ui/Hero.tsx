@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { useState } from "react";
 import { FaClapperboard, FaVideo, FaCirclePlay, FaImage, FaDownload, FaArrowRotateRight, FaXmark } from "react-icons/fa6";
 
@@ -37,7 +36,7 @@ export default function Hero() {
     };
 
     return (
-        <div className="relative flex flex-col py-64 bg-linear-to-r from-blue-800 to-purple-700 items-center justify-center">
+        <div className="relative flex flex-col py-64 bg-linear-to-r from-blue-600 to-purple-600 items-center justify-center">
             {submit && (
                 <div className="fixed inset-0 z-20 bg-black/60 px-4 py-6">
                     <div className="flex min-h-full flex-col p-2 items-center justify-center gap-4">

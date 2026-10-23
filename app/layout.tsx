@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Tiny5, Instrument_Sans } from "next/font/google";
+import { Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import NavBar from "./components/layout/NavBar";
 import Footer from "./components/layout/Footer";
@@ -8,13 +8,6 @@ const instrument_Sans = Instrument_Sans({
   variable: "--font-instrument-sans",
   subsets: ["latin"],
 });
-
-const tiny5 = Tiny5({
-  variable: "--font-tiny5",
-  subsets: ["latin"],
-  display: "swap",
-  weight: "400",
-})
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -25,7 +18,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${instrument_Sans.variable} ${tiny5.variable} h-full antialiased`}
+      className={`${instrument_Sans.variable} h-full antialiased`}
     > 
       <body className="min-h-full flex flex-col">
         <NavBar />
