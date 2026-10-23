@@ -5,7 +5,7 @@ import FAQ from "./components/ui/FAQ";
 
 export default function Home() {
   return (
-    <div className="bg-white">
+    <div className="bg-white bg-[radial-gradient(#A19D9C_0.1px,transparent_1px)] bg-size-[24px_24px]">
       <Hero />
       <HowTo />
       <Client />

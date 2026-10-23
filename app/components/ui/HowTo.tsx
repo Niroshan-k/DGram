@@ -21,7 +21,7 @@ const steps = [
 export default function HowTo() {
     return (
         <div className="max-w-7xl mx-auto px-4 lg:px-0 py-12 lg:py-24">
-            <div className="text-center mt-12">
+            <div className="text-center bg-white mt-12">
                 <h1 className="text-3xl font-bold text-gray-800">Download Instagram Videos in 3 Easy Steps</h1>
                 <p className="text-gray-600">Get your favorite content saved to your device in seconds.</p>
             </div>
@@ -37,11 +37,11 @@ export default function HowTo() {
                                 className="rounded-2xl lg:max-w-sm object-cover  bg-linear-to-r from-red-300 to-violet-300 p-2 border border-gray-100 shadow-2xl"
                             />
                         </div>
-                        <div className="flex items-center justify-center gap-2 mt-12 text-center">
+                        <div className="flex items-center bg-white justify-center gap-2 mt-12 text-center">
                             <h2 className="font-bold text-gray-800 bg-linear-to-r from-red-500 to-violet-400 py-2 px-4 rounded-full">{index + 1}</h2>
                             <h3 className="text-gray-600 text-2xl font-bold">{step.title}</h3>
-                        </div>
-                        <div className="mt-2 text-center justify-center flex">
+                        </div>eeweeeeee
+                        <div className="mt-2 text-center bg-white justify-center flex">
                             <p className="text-gray-700 max-w-72">{step.description}</p>
                         </div>
                     </div>

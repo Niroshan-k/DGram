@@ -37,16 +37,7 @@ export default function Hero() {
     };
 
     return (
-        <div className="relative flex flex-col min-h-screen items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 lg:inset-4 overflow-hidden lg:rounded-2xl">
-                <Image
-                    src="/background.jpg"
-                    alt="Hero Image"
-                    fill
-                    priority
-                    className="object-cover"
-                />
-            </div>
+        <div className="relative flex flex-col py-64 bg-linear-to-r from-blue-800 to-purple-700 items-center justify-center">
             {submit && (
                 <div className="fixed inset-0 z-20 bg-black/60 px-4 py-6">
                     <div className="flex min-h-full flex-col p-2 items-center justify-center gap-4">

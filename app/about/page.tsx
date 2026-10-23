@@ -73,7 +73,7 @@ const downloadTypes = [
 
 export default function About() {
     return (
-        <main className="bg-white pb-16">
+        <main className="bg-white pb-16 bg-[radial-gradient(#A19D9C_0.1px,transparent_1px)] bg-size-[24px_24px]">
             <section className="relative overflow-hidden bg-linear-to-br from-red-500 via-rose-500 to-violet-500 px-6 pb-16 pt-40 text-white lg:px-12 lg:pb-24 lg:pt-48">
                 <div className="relative mx-auto max-w-7xl">
                     <p className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-white/80">

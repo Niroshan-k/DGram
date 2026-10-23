@@ -48,8 +48,8 @@ export default function Client() {
             <div className="items-center justify-center gap-4 bg-amber-200/20 border border-yellow-400 px-3 py-1 rounded-full">
                 <span className="text-yellow-800 font-semibold">Rated 4.9 / 5 by 10K+ Happy Users</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800">What Our Users Say</h1>
-            <p className="mt-4 text-lg text-gray-600">Don&apos;t just take our word for it - hear from our satisfied customers!</p>
+            <h1 className="text-3xl font-bold bg-white text-gray-800">What Our Users Say</h1>
+            <p className="mt-4 text-lg text-gray-600 bg-white">Don&apos;t just take our word for it - hear from our satisfied customers!</p>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 lg:p-12">
                 {response.map((item, index) => (
