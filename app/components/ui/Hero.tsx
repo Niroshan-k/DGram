@@ -14,7 +14,10 @@ import {
 
 export default function Hero() {
   const [submit, setSubmit] = useState(false);
-  const [embedUrl, setEmbedUrl] = useState("");
+  const [mediaUrl, setMediaUrl] = useState("");
+  const [mediaKind, setMediaKind] = useState<"video" | "image">("video");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [type, setType] = useState("Video");
   const downloadTypes = [
     { label: "Video", icon: FaVideo },
@@ -23,31 +26,37 @@ export default function Hero() {
     { label: "Photos", icon: FaImage },
   ];
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const submittedUrl = formData.get("url") as string;
+    setError("");
+    setLoading(true);
 
     try {
-      const instagramUrl = new URL(submittedUrl);
-      const pathParts = instagramUrl.pathname.split("/").filter(Boolean);
-      const contentType = pathParts[0];
-      const shortcode = pathParts[1];
+      const response = await fetch("/api/instagram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: submittedUrl, type }),
+      });
+      const result = await response.json();
 
-      if (
-        !["instagram.com", "www.instagram.com"].includes(
-          instagramUrl.hostname,
-        ) ||
-        contentType !== "reel" ||
-        !shortcode
-      ) {
-        return;
+      if (!response.ok) {
+        throw new Error(result.error ?? "Unable to find downloadable media.");
       }
 
-      setEmbedUrl(`https://www.instagram.com/reel/${shortcode}/embed`);
+      setMediaUrl(result.mediaUrl);
+      setMediaKind(result.kind);
       setSubmit(true);
-    } catch {
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to find downloadable media.",
+      );
       setSubmit(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,24 +76,37 @@ export default function Hero() {
               </button>
             </div>
             <div className="relative flex w-full max-w-4xl flex-col bg-white overflow-hidden rounded-2xl shadow-2xl lg:flex-row">
-              <iframe
-                title="Instagram reel preview"
-                src={embedUrl}
-                className="h-[50vh] min-h-100 w-full border-0 lg:h-[min(78vh,700px)] lg:w-105 lg:shrink-0"
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-              />
+              {mediaKind === "video" ? (
+                <video
+                  controls
+                  autoPlay
+                  className="h-[50vh] min-h-100 w-full bg-black object-contain lg:h-[min(78vh,700px)] lg:w-105 lg:shrink-0"
+                  src={mediaUrl}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  alt="Instagram media preview"
+                  className="h-[50vh] min-h-100 w-full object-contain lg:h-[min(78vh,700px)] lg:w-105 lg:shrink-0"
+                  src={mediaUrl} 
+                />
+              )}
               <div className="flex w-full flex-col items-center p-2 justify-center gap-2 font-semibold sm:px-6 lg:w-70">
-                <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-linear-to-r from-red-500 to-purple-500 px-4 py-2 text-white font-semibold transition-transform">
+                <a
+                  download
+                  href={`/api/instagram/download?url=${encodeURIComponent(mediaUrl)}`}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-linear-to-r from-red-500 to-purple-500 px-4 py-2 text-white font-semibold transition-transform"
+                >
                   <FaDownload />
-                  Download Video
-                </button>
+                  Download {mediaKind === "video" ? "Video" : "Photo"}
+                </a>
                 <button
                   type="button"
                   className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold transition-transform"
                   onClick={() => setSubmit(false)}
                 >
                   <FaArrowRotateRight />
-                  Another Video
+                  Another
                 </button>
               </div>
             </div>
@@ -137,9 +159,10 @@ export default function Hero() {
                 type="submit"
                 className="absolute right-2 top-13 -translate-y-1/2 rounded-full bg-linear-to-r from-red-400 to-violet-500 px-5 py-2 text-white transition-colors hover:bg-blue-600"
               >
-                Download
+                {loading ? "Finding media..." : "Download"}
               </button>
             </form>
+            {error && <p className="mt-3 text-center text-sm text-white">{error}</p>}
           </div>
         </div>
       )}
