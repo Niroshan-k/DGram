@@ -9,7 +9,6 @@ import { FaBars, FaXmark } from "react-icons/fa6";
 export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [downloaderOpen, setDownloaderOpen] = useState(false);
 
     useEffect(() => {
         let scrollRequestId: number | null = null;
@@ -42,8 +41,8 @@ export default function Header() {
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 border-b transition-[background-color,backdrop-filter,box-shadow,padding,transform] duration-500 ease-out ${isScrolled
-                ? "bg-gym-dark/85 backdrop-blur-md py-4 border-gym-crimson/30 shadow-lg shadow-black/20"
-                : "bg-white m-6 rounded-2xl p-3 border-transparent"
+                ? "bg-gym-dark/85 backdrop-blur-md py-4 border-b border-white/10 shadow-lg shadow-black/20"
+                : "bg-white m-2 rounded-2xl p-3 border-transparent"
                 }`}
         >
             <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">

@@ -136,7 +136,7 @@ export default function Hero() {
               </React.Fragment>
             ))}
           </div>
-          <h1 className="text-5xl lg:text-7xl mt-2 font-tiny5 uppercase font-bold text-center">
+          <h1 className="text-3xl lg:text-7xl mt-2 font-tiny5 uppercase font-bold text-center">
             DownloadGram
           </h1>
           <p className="text-center text-sm px-4 py-2 rounded-full">
