@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import path from "path";
+import fs from "fs";
+
+const execFileAsync = promisify(execFile);
 
 const INSTAGRAM_HOSTS = new Set([
   "instagram.com",
@@ -7,7 +13,7 @@ const INSTAGRAM_HOSTS = new Set([
 ]);
 
 const mediaUrlPattern =
-  /https?:\\?\/\\?\/[^"'\\\s<>]+(?:\.mp4|\/video\/)[^"'\\\s<>]*/gi;
+  /https?:\\?\/\\?[^"'\\\s<>]+(?:\.mp4|\/video\/)[^"'\\\s<>]*/gi;
 
 type MediaKind = "video" | "image";
 
@@ -64,6 +70,18 @@ function getMetaContent(html: string, property: string) {
   return null;
 }
 
+function extractVideoFromEmbedHtml(html: string) {
+  const match = html.match(
+    /video_url(?:\\+)?\"?\s*:\s*(?:\\+)?\"(https?:[^\"]+?)(?:\\+)?\"/i,
+  );
+  if (match?.[1]) {
+    let clean = match[1].replace(/\\+\//g, "/").replace(/\\+/g, "");
+    clean = clean.replace(/&amp;/g, "&");
+    return clean;
+  }
+  return null;
+}
+
 function getMediaUrls(html: string) {
   const normalizedHtml = decodeHtml(html);
   const candidates = [
@@ -83,11 +101,89 @@ function getShortcode(url: URL) {
   return parts[1] ?? "instagram-media";
 }
 
-function getEmbedPath(url: URL, shortcode: string) {
-  const contentType = url.pathname.split("/").filter(Boolean)[0];
-  return contentType === "reel"
-    ? `https://www.instagram.com/reel/${encodeURIComponent(shortcode)}/embed/`
-    : `https://www.instagram.com/p/${encodeURIComponent(shortcode)}/embed/`;
+function getEmbedPath(shortcode: string) {
+  return `https://www.instagram.com/p/${encodeURIComponent(shortcode)}/embed/captioned/`;
+}
+
+function getYtDlpPath(): string | null {
+  const localBin = path.join(process.cwd(), "bin", "yt-dlp");
+  if (fs.existsSync(localBin)) return localBin;
+  if (fs.existsSync("/tmp/yt-dlp")) return "/tmp/yt-dlp";
+  return null;
+}
+
+async function getOrDownloadMergedVideo(
+  targetUrl: string,
+  shortcode: string,
+): Promise<string | null> {
+  const cacheDir = "/tmp/downloadgram_cache";
+  if (!fs.existsSync(cacheDir)) {
+    fs.mkdirSync(cacheDir, { recursive: true });
+  }
+
+  const outputPath = path.join(cacheDir, `${shortcode}.mp4`);
+  if (fs.existsSync(outputPath)) {
+    const stat = fs.statSync(outputPath);
+    if (stat.size > 10000) {
+      return `/api/instagram/media?shortcode=${encodeURIComponent(shortcode)}`;
+    }
+  }
+
+  const ytDlpPath = getYtDlpPath();
+  if (!ytDlpPath) return null;
+
+  try {
+    await execFileAsync(
+      ytDlpPath,
+      [
+        "--no-warnings",
+        "--no-playlist",
+        "-f",
+        "bestvideo+bestaudio/best",
+        "--merge-output-format",
+        "mp4",
+        "-o",
+        outputPath,
+        targetUrl,
+      ],
+      { timeout: 35000 },
+    );
+
+    if (fs.existsSync(outputPath)) {
+      const stat = fs.statSync(outputPath);
+      if (stat.size > 10000) {
+        return `/api/instagram/media?shortcode=${encodeURIComponent(shortcode)}`;
+      }
+    }
+  } catch {
+    // If merger fails, continue to fallbacks
+  }
+
+  return null;
+}
+
+async function extractPhotoViaYtDlp(targetUrl: string) {
+  const ytDlpPath = getYtDlpPath();
+  if (!ytDlpPath) return null;
+
+  try {
+    const { stdout } = await execFileAsync(
+      ytDlpPath,
+      ["--no-warnings", "--no-playlist", "-j", targetUrl],
+      { timeout: 25000 },
+    );
+
+    const data = JSON.parse(stdout);
+    const imageUrl =
+      data.thumbnail ||
+      (Array.isArray(data.thumbnails) && data.thumbnails.length > 0
+        ? data.thumbnails[data.thumbnails.length - 1].url
+        : null);
+
+    return imageUrl;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchPublicPage(url: string, userAgent: string) {
@@ -121,95 +217,106 @@ export async function POST(request: Request) {
 
   const sourceUrl = new URL(input.url);
   const selectedType = typeof input.type === "string" ? input.type : "Video";
+  const shortcode = getShortcode(sourceUrl);
 
-  let instagramResponse: Response;
-  try {
-    instagramResponse = await fetch(sourceUrl, {
-      headers: {
-        Accept: "text/html,application/xhtml+xml",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
-      },
-      redirect: "follow",
-      cache: "no-store",
-    });
-  } catch {
-    return NextResponse.json(
-      { error: "Instagram could not be reached. Try again later." },
-      { status: 502 },
-    );
+  let videoUrl = "";
+  let imageUrl = "";
+
+  if (selectedType === "Photos") {
+    // For photos, extract direct image URL
+    imageUrl = (await extractPhotoViaYtDlp(sourceUrl.toString())) ?? "";
+  } else {
+    // 1. Primary method for Video/Reels: Merge video + audio stream so audio is guaranteed
+    videoUrl =
+      (await getOrDownloadMergedVideo(sourceUrl.toString(), shortcode)) ?? "";
   }
 
-  let html = instagramResponse.ok ? await instagramResponse.text() : "";
-  const shortcode = getShortcode(sourceUrl);
-  const mediaUrls = getMediaUrls(html);
-  let videoUrl =
-    getMetaContent(html, "og:video") ??
-    getMetaContent(html, "og:video:secure_url") ??
-    mediaUrls.find((url) => /\.mp4(?:[?&]|$)/i.test(url)) ??
-    mediaUrls.find((url) => /\/video\//i.test(url));
-  let imageUrl = getMetaContent(html, "og:image") ?? mediaUrls.find((url) => !/\.mp4/i.test(url));
-
-  if (!videoUrl && !imageUrl) {
+  // 2. Secondary method: Extract progressive video directly from Instagram captioned embed
+  if (!videoUrl && !imageUrl && shortcode !== "instagram-media") {
     try {
-      const cleanUrl = new URL(sourceUrl);
-      cleanUrl.search = "";
-      const crawlerHtml = await fetchPublicPage(
-        cleanUrl.toString(),
-        "facebookexternalhit/1.1",
-      );
-      const crawlerMediaUrls = getMediaUrls(crawlerHtml);
-      videoUrl =
-        getMetaContent(crawlerHtml, "og:video") ??
-        crawlerMediaUrls.find((url) => /\.mp4(?:[?&]|$)/i.test(url));
-      imageUrl =
-        getMetaContent(crawlerHtml, "og:image") ??
-        crawlerMediaUrls.find((url) => !/\.mp4/i.test(url));
+      const embedResponse = await fetch(getEmbedPath(shortcode), {
+        headers: {
+          Accept: "text/html,application/xhtml+xml",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
+        },
+        cache: "no-store",
+      });
+      if (embedResponse.ok) {
+        const embedHtml = await embedResponse.text();
+        const extracted = extractVideoFromEmbedHtml(embedHtml);
+        if (extracted) {
+          videoUrl = extracted;
+        }
+        const embedMediaUrls = getMediaUrls(embedHtml);
+        imageUrl =
+          getMetaContent(embedHtml, "og:image") ??
+          embedMediaUrls.find((url) => !/\.mp4/i.test(url)) ??
+          "";
+      }
     } catch {
-      // Continue to the embed fallback and return a clear error if needed.
+      // Continue to next fallbacks
     }
   }
 
-  if (!videoUrl && !imageUrl && shortcode !== "instagram-media") {
+  // 3. Fallback method: Traditional crawler / og tags
+  if (!videoUrl && !imageUrl) {
     try {
-      const embedResponse = await fetch(
-        getEmbedPath(sourceUrl, shortcode),
-        {
+      let instagramResponse: Response | null = null;
+      try {
+        instagramResponse = await fetch(sourceUrl, {
           headers: {
             Accept: "text/html,application/xhtml+xml",
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
           },
+          redirect: "follow",
           cache: "no-store",
-        },
-      );
-      if (embedResponse.ok) {
-        html = await embedResponse.text();
-        const embedMediaUrls = getMediaUrls(html);
+        });
+      } catch {
+        // Continue to crawler fallback
+      }
+
+      const html = instagramResponse?.ok ? await instagramResponse.text() : "";
+      const mediaUrls = getMediaUrls(html);
+      videoUrl =
+        getMetaContent(html, "og:video") ??
+        getMetaContent(html, "og:video:secure_url") ??
+        mediaUrls.find((url) => /\.mp4(?:[?&]|$)/i.test(url)) ??
+        mediaUrls.find((url) => /\/video\//i.test(url)) ??
+        "";
+      imageUrl =
+        getMetaContent(html, "og:image") ??
+        mediaUrls.find((url) => !/\.mp4/i.test(url)) ??
+        "";
+
+      if (!videoUrl && !imageUrl) {
+        const cleanUrl = new URL(sourceUrl);
+        cleanUrl.search = "";
+        const crawlerHtml = await fetchPublicPage(
+          cleanUrl.toString(),
+          "facebookexternalhit/1.1",
+        );
+        const crawlerMediaUrls = getMediaUrls(crawlerHtml);
         videoUrl =
-          getMetaContent(html, "og:video") ??
-          embedMediaUrls.find((url) => /\.mp4(?:[?&]|$)/i.test(url));
+          getMetaContent(crawlerHtml, "og:video") ??
+          crawlerMediaUrls.find((url) => /\.mp4(?:[?&]|$)/i.test(url)) ??
+          "";
         imageUrl =
-          getMetaContent(html, "og:image") ??
-          embedMediaUrls.find((url) => !/\.mp4/i.test(url));
+          getMetaContent(crawlerHtml, "og:image") ??
+          crawlerMediaUrls.find((url) => !/\.mp4/i.test(url)) ??
+          "";
       }
     } catch {
-      // The original response is still used for the final error.
+      // Ignore fallback error
     }
-  }
-
-  if (!instagramResponse.ok && !videoUrl && !imageUrl) {
-    return NextResponse.json(
-      { error: "Instagram did not return this content. It may be private or unavailable." },
-      { status: 502 },
-    );
   }
 
   const mediaUrl =
     selectedType === "Photos" || !videoUrl ? imageUrl : videoUrl;
   const kind: MediaKind = mediaUrl === imageUrl ? "image" : "video";
 
-  if (!mediaUrl || !/^https?:\/\//i.test(mediaUrl)) {
+  if (!mediaUrl) {
     return NextResponse.json(
       {
         error:

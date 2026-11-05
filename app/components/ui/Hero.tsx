@@ -80,6 +80,8 @@ export default function Hero() {
                 <video
                   controls
                   autoPlay
+                  playsInline
+                  preload="metadata"
                   className="h-[50vh] min-h-100 w-full bg-black object-contain lg:h-[min(78vh,700px)] lg:w-105 lg:shrink-0"
                   src={mediaUrl}
                 />
