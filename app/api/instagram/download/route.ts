@@ -38,11 +38,21 @@ export async function GET(request: Request) {
     contentType.startsWith("video/") || contentType.startsWith("image/")
       ? contentType
       : "application/octet-stream";
+  const extension =
+    safeContentType.split(";")[0] === "video/mp4"
+      ? "mp4"
+      : safeContentType.split(";")[0] === "image/jpeg"
+        ? "jpg"
+        : safeContentType.split(";")[0] === "image/png"
+          ? "png"
+          : safeContentType.split(";")[0] === "image/webp"
+            ? "webp"
+            : "bin";
 
   return new NextResponse(mediaResponse.body, {
     headers: {
       "Content-Type": safeContentType,
-      "Content-Disposition": `attachment; filename="downloadgram-media"`,
+      "Content-Disposition": `attachment; filename="downloadgram-media.${extension}"`,
       "Cache-Control": "no-store",
     },
   });
