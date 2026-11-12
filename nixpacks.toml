@@ -1,0 +1,5 @@
+# Nixpacks configuration for Dokploy / Coolify / Railway
+# Ensures python3, ffmpeg, and yt-dlp are installed alongside Node.js
+
+[phases.setup]
+nixPkgs = ["...", "python3", "ffmpeg", "yt-dlp"]

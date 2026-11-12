@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { execFile } from "child_process";
+import { execFile, execSync } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import fs from "fs";
@@ -106,10 +106,64 @@ function getEmbedPath(shortcode: string) {
 }
 
 function getYtDlpPath(): string | null {
+  // 1. Check system PATH first
+  try {
+    const sysPath = execSync("which yt-dlp 2>/dev/null", { encoding: "utf-8" }).trim();
+    if (sysPath) return sysPath;
+  } catch {}
+
+  // 2. Check known system bin locations
+  const knownLocations = [
+    "/usr/local/bin/yt-dlp",
+    "/usr/bin/yt-dlp",
+    "/root/.nix-profile/bin/yt-dlp",
+  ];
+  for (const sysPath of knownLocations) {
+    try {
+      if (fs.existsSync(/*turbopackIgnore: true*/ sysPath)) return sysPath;
+    } catch {}
+  }
+
+  // 3. Check workspace bundled binary
   const localBin = path.join(process.cwd(), "bin", "yt-dlp");
-  if (fs.existsSync(localBin)) return localBin;
-  if (fs.existsSync("/tmp/yt-dlp")) return "/tmp/yt-dlp";
-  return null;
+  if (fs.existsSync(localBin)) {
+    try {
+      fs.chmodSync(localBin, 0o755);
+    } catch {}
+    return localBin;
+  }
+
+  const tmpBin = "/tmp/yt-dlp";
+  try {
+    if (fs.existsSync(/*turbopackIgnore: true*/ tmpBin)) {
+      try {
+        fs.chmodSync(tmpBin, 0o755);
+      } catch {}
+      return tmpBin;
+    }
+  } catch {}
+
+  return "yt-dlp";
+}
+
+async function runYtDlp(args: string[], timeoutMs = 35000): Promise<{ stdout: string; stderr: string }> {
+  const ytDlpPath = getYtDlpPath();
+  if (!ytDlpPath) throw new Error("yt-dlp not found");
+
+  try {
+    return await execFileAsync(ytDlpPath, args, { timeout: timeoutMs });
+  } catch (err: any) {
+    // If direct execution fails due to missing shebang interpreter or permissions, try via python3
+    if (
+      err.code === "ENOEXEC" ||
+      err.code === "ENOENT" ||
+      err.code === "EACCES" ||
+      err.message?.includes("python")
+    ) {
+      return await execFileAsync("python3", [ytDlpPath, ...args], { timeout: timeoutMs });
+    }
+    throw err;
+  }
 }
 
 async function getOrDownloadMergedVideo(
@@ -129,12 +183,8 @@ async function getOrDownloadMergedVideo(
     }
   }
 
-  const ytDlpPath = getYtDlpPath();
-  if (!ytDlpPath) return null;
-
   try {
-    await execFileAsync(
-      ytDlpPath,
+    await runYtDlp(
       [
         "--no-warnings",
         "--no-playlist",
@@ -146,7 +196,7 @@ async function getOrDownloadMergedVideo(
         outputPath,
         targetUrl,
       ],
-      { timeout: 35000 },
+      35000,
     );
 
     if (fs.existsSync(outputPath)) {
@@ -155,22 +205,18 @@ async function getOrDownloadMergedVideo(
         return `/api/instagram/media?shortcode=${encodeURIComponent(shortcode)}`;
       }
     }
-  } catch {
-    // If merger fails, continue to fallbacks
+  } catch (err: any) {
+    console.error("[DownloadGram yt-dlp error]:", err?.message || err);
   }
 
   return null;
 }
 
 async function extractPhotoViaYtDlp(targetUrl: string) {
-  const ytDlpPath = getYtDlpPath();
-  if (!ytDlpPath) return null;
-
   try {
-    const { stdout } = await execFileAsync(
-      ytDlpPath,
+    const { stdout } = await runYtDlp(
       ["--no-warnings", "--no-playlist", "-j", targetUrl],
-      { timeout: 25000 },
+      25000,
     );
 
     const data = JSON.parse(stdout);
@@ -181,7 +227,8 @@ async function extractPhotoViaYtDlp(targetUrl: string) {
         : null);
 
     return imageUrl;
-  } catch {
+  } catch (err: any) {
+    console.error("[DownloadGram yt-dlp photo error]:", err?.message || err);
     return null;
   }
 }
@@ -277,8 +324,8 @@ export async function POST(request: Request) {
         // Continue to crawler fallback
       }
 
-      const html = instagramResponse?.ok ? await instagramResponse.text() : "";
-      const mediaUrls = getMediaUrls(html);
+      let html = instagramResponse?.ok ? await instagramResponse.text() : "";
+      let mediaUrls = getMediaUrls(html);
       videoUrl =
         getMetaContent(html, "og:video") ??
         getMetaContent(html, "og:video:secure_url") ??
