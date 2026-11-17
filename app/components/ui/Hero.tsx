@@ -10,6 +10,8 @@ import {
   FaDownload,
   FaArrowRotateRight,
   FaXmark,
+  FaLink,
+  FaRegPaste,
 } from "react-icons/fa6";
 
 export default function Hero() {
@@ -61,7 +63,7 @@ export default function Hero() {
   };
 
   return (
-    <div className="relative flex flex-col py-64 bg-linear-to-r from-blue-700 to-purple-700 items-center justify-center">
+    <div className="relative flex flex-col py-64 bg-linear-to-r from-blue-800 to-blue-900 items-center justify-center">
       {submit && (
         <div className="fixed inset-0 z-20 bg-black/60 px-4 py-6">
           <div className="flex min-h-full flex-col p-2 items-center justify-center gap-4">
@@ -150,19 +152,23 @@ export default function Hero() {
               onSubmit={handleSubmit}
               className="relative mx-auto mt-4 w-full max-w-xl"
             >
-              <div className="w-24 rounded-t-2xl text-black/60 font-bold px-2 bg-white">{type}</div>
-              <input
-                name="url"
-                type="text"
-                placeholder="Enter Instagram URL"
-                className="w-full rounded-full rounded-tl text-gray-600 bg-white p-4 pr-32 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-13 -translate-y-1/2 rounded-full bg-linear-to-r from-red-400 to-violet-500 px-5 py-2 text-white transition-colors hover:bg-blue-600"
-              >
-                {loading ? "Finding media..." : "Download"}
-              </button>
+              <div className="font-bold font-serif italic">{type}</div>
+              <div className="flex items-center gap-2 bg-white rounded-md mt-2 p-2">
+                <FaLink className="text-4xl text-black" />
+                <input
+                  name="url"
+                  type="text"
+                  placeholder="Enter Instagram URL"
+                  className="w-full rounded-lg pl-2 text-gray-600 focus:outline-none flex"
+                />
+                <FaRegPaste className="text-5xl text-cyan-500 bg-cyan-100 px-2 py-2 rounded h-full"/>
+                <button
+                  type="submit"
+                  className="rounded-md bg-linear-to-r from-teal-500 to-teal-400 px-5 py-2 text-white transition-colors hover:bg-blue-600"
+                >
+                  {loading ? "Finding media..." : "Download"}
+                </button>
+              </div>
             </form>
             {error && <p className="mt-3 text-center text-sm text-white">{error}</p>}
           </div>
