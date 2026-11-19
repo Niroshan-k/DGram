@@ -73,7 +73,7 @@ const downloadTypes = [
 
 export default function About() {
     return (
-        <main className="bg-white pb-16 bg-[radial-gradient(#A19D9C_0.1px,transparent_1px)] bg-size-[24px_24px]">
+        <main className="bg-white dark:bg-zinc-900 pb-16 bg-[radial-gradient(#A19D9C_0.1px,transparent_1px)] dark:bg-[radial-gradient(#52525b_0.1px,transparent_1px)] bg-size-[24px_24px] transition-colors duration-200">
             <section className="relative overflow-hidden bg-linear-to-br from-red-500 via-rose-500 to-violet-500 px-6 pb-16 pt-40 text-white lg:px-12 lg:pb-24 lg:pt-48">
                 <div className="relative mx-auto max-w-7xl">
                     <p className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-white/80">
@@ -95,18 +95,18 @@ export default function About() {
                     return (
                         <article
                             key={downloadType.title}
-                            className={`flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-200/60 lg:p-8 ${index === 0 ? "lg:col-span-2" : ""}`}
+                            className={`flex flex-col rounded-2xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-6 shadow-lg shadow-gray-200/60 dark:shadow-none lg:p-8 ${index === 0 ? "lg:col-span-2" : ""}`}
                         >
                             <div className="flex items-center gap-4">
                                 <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-violet-500 text-xl text-white">
                                     <Icon />
                                 </div>
                                 <div>
-                                    <h2 className="mt-1 text-2xl font-bold text-gray-800">{downloadType.title}</h2>
+                                    <h2 className="mt-1 text-2xl font-bold text-gray-800 dark:text-zinc-100">{downloadType.title}</h2>
                                 </div>
                             </div>
-                            <p className="mt-6 leading-7 text-gray-600">{downloadType.description}</p>
-                            <ul className="mt-6 grid gap-3 text-sm text-gray-600 sm:grid-cols-2">
+                            <p className="mt-6 leading-7 text-gray-600 dark:text-zinc-300">{downloadType.description}</p>
+                            <ul className="mt-6 grid gap-3 text-sm text-gray-600 dark:text-zinc-300 sm:grid-cols-2">
                                 {downloadType.benefits.map((benefit) => (
                                     <li key={benefit} className="flex items-start gap-2">
                                         <FaCircleCheck className="mt-0.5 shrink-0 text-green-500" />

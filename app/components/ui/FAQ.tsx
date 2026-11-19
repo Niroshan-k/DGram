@@ -35,17 +35,17 @@ export default function FAQ() {
 					<FaCircleQuestion aria-hidden="true" />
 					<span className="text-sm font-semibold">FAQ</span>
 				</div>
-				<h2 id="faq-heading" className="mt-4 text-3xl font-bold text-gray-800">Frequently Asked Questions</h2>
-				<p className="mt-2 text-gray-600">Quick answers about DownloadGram.</p>
+				<h2 id="faq-heading" className="mt-4 text-3xl font-bold text-gray-800 dark:text-zinc-100">Frequently Asked Questions</h2>
+				<p className="mt-2 text-gray-600 dark:text-zinc-400">Quick answers about DownloadGram.</p>
 			</div>
 			<div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
 				{faqs.map((faq) => (
-					<article key={faq.question} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
+					<article key={faq.question} className="rounded-2xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/60 p-6 shadow-lg shadow-gray-200/50 dark:shadow-none transition-colors">
 						<div className="flex items-start justify-between gap-4">
-							<h3 className="font-bold leading-6 text-gray-800">{faq.question}</h3>
+							<h3 className="font-bold leading-6 text-gray-800 dark:text-zinc-100">{faq.question}</h3>
 							<FaPlus className="mt-1 shrink-0 text-red-500" aria-hidden="true" />
 						</div>
-						<p className="mt-4 text-sm leading-6 text-gray-600">{faq.answer}</p>
+						<p className="mt-4 text-sm leading-6 text-gray-600 dark:text-zinc-400">{faq.answer}</p>
 					</article>
 				))}
 			</div>

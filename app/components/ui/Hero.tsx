@@ -63,21 +63,21 @@ export default function Hero() {
   };
 
   return (
-    <div className="relative flex flex-col py-64 bg-linear-to-r from-blue-800 to-blue-900 items-center justify-center">
+    <div className="relative flex flex-col py-64 bg-linear-to-r from-blue-300 to-blue-400 dark:bg-linear-to-r dark:from-blue-700 dark:to-blue-800 items-center justify-center">
       {submit && (
-        <div className="fixed inset-0 z-20 bg-black/60 px-4 py-6">
+        <div className="fixed inset-0 z-20 bg-black/60 backdrop-blur-xs px-4 py-6">
           <div className="flex min-h-full flex-col p-2 items-center justify-center gap-4">
             <div className="flex w-full max-w-4xl justify-end">
               <button
                 type="button"
                 aria-label="Close preview"
                 onClick={() => setSubmit(false)}
-                className="rounded-full bg-black/70 p-2 text-lg leading-none text-white hover:bg-black"
+                className="rounded-full bg-black/70 p-2 text-lg leading-none text-white hover:bg-black transition-colors"
               >
                 <FaXmark />
               </button>
             </div>
-            <div className="relative flex w-full max-w-4xl flex-col bg-white overflow-hidden rounded-2xl shadow-2xl lg:flex-row">
+            <div className="relative flex w-full max-w-4xl flex-col bg-white dark:bg-zinc-900 border border-transparent dark:border-zinc-800 overflow-hidden rounded-2xl shadow-2xl lg:flex-row">
               {mediaKind === "video" ? (
                 <video
                   controls
@@ -119,7 +119,7 @@ export default function Hero() {
       )}
       {!submit && (
         <div className="relative z-10 flex flex-col gap-2 items-center justify-center">
-          <div className="flex w-max bg-white/20 backdrop-blur-xl rounded-2xl border border-gray-100/10 items-center gap-4">
+          <div className="flex w-max bg-black/20 dark:bg-white/20 backdrop-blur-xl rounded-2xl border-gray-700/10 border dark:border-gray-100/10 items-center gap-4">
             {downloadTypes.map(({ label, icon: Icon }, index) => (
               <React.Fragment key={label}>
                 <button
